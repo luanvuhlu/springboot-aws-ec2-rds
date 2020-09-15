@@ -12,7 +12,7 @@ Sometimes, We have to move our systems to another AWS account. That means databa
 
 ## How does it work?
 
-![Achitecture](image/AWS Patterns.png)
+![Achitecture](image/AWS_Patterns.png)
 
 We store RDS credentials in Secrets Manager and Spring Boot application will load it at startup.  
 We only need to know secretName and which region secrets create in.  
@@ -20,8 +20,8 @@ To grant EC2 instance (Spring Boot) reading Secrets Manager, we use IAM Role, IA
 **Never hard code AWS credentials in your code!**
 
 ## TODO
-[x] Optional use Secrets Manager
-[] Test code
-[] Use region as an environment
+[x] Optional use Secrets Manager  
+[] Test code  
+[] Use region as an environment  
 
 
