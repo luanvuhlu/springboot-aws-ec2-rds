@@ -3,7 +3,7 @@ SpringBoot AWS EC2 RDS
 
 This sample project demonstrates how to use AWS secret manager service with spring-boot framework as application properties configuration, such as database credentials
 
-## What's wrong with legacy database credentials conguration
+## What's wrong with legacy database credentials configuration
 
 - Security  
 Hardcode database credentals, or any credentals is a critical security leak.  
@@ -23,5 +23,6 @@ To grant EC2 instance (Spring Boot) reading Secrets Manager, we use IAM Role, IA
 [x] Optional use Secrets Manager  
 [] Test code  
 [] Use region as an environment  
+[] RDS Read Replicas  
 
 
