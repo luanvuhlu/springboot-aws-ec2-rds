@@ -1,0 +1,1 @@
+./mvnw spring-boot:build-image -Dspring-boot.build-image.imageName=luanvv/springboot-aws-ec2-rds

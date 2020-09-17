@@ -44,6 +44,8 @@ public class DatabasePropertiesListener implements ApplicationListener<Applicati
 		}
 		String secretName = env.getProperty(AWS_SECRET_NAME);
 		String region = env.getProperty(AWS_SECRETS_REGION);
+		System.out.println("********************");
+		System.out.println(env.getProperty(USE_SECRETS));
 		AWSSecretsManager client = AWSSecretsManagerClientBuilder.standard().withRegion(region).build();
 
 		GetSecretValueRequest getSecretValueRequest = new GetSecretValueRequest().withSecretId(secretName);
