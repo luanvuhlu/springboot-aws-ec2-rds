@@ -1,1 +1,0 @@
-org.springframework.context.ApplicationListener=com.luanvv.springboot.aws.ec2andrds.configuration.DatabasePropertiesListener

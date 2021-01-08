@@ -15,8 +15,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import com.luanvv.springboot.aws.ec2andrds.dto.StudentDTO;
 import com.luanvv.springboot.aws.ec2andrds.entities.Student;
 import com.luanvv.springboot.aws.ec2andrds.exceptions.StudentNotFoundException;
+import com.luanvv.springboot.aws.ec2andrds.repositories.ReadStudentRepository;
 import com.luanvv.springboot.aws.ec2andrds.repositories.StudentRepository;
 
 @RestController
@@ -24,15 +26,18 @@ public class StudentController {
 
 	@Autowired
 	private StudentRepository studentRepository;
+	
+	@Autowired
+	private ReadStudentRepository readStudentRepository;
 
 	@GetMapping("/students")
 	public List<Student> retrieveAllStudents() {
-		return studentRepository.findAll();
+		return readStudentRepository.findAll();
 	}
 
 	@GetMapping("/student/{id}")
 	public Student retrieveStudent(@PathVariable int id) {
-		return studentRepository.findById(id)
+		return readStudentRepository.findById(id)
 				.orElseThrow(() -> new StudentNotFoundException("id-" + id));
 	}
 
@@ -42,8 +47,8 @@ public class StudentController {
 	}
 
 	@PostMapping("/student")
-	public ResponseEntity<Object> createStudent(@RequestBody Student student) {
-		Student savedStudent = studentRepository.save(student);
+	public ResponseEntity<Object> createStudent(@RequestBody StudentDTO studentDTO) {
+		Student savedStudent = studentRepository.save(studentDTO.toBean());
 		URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
 				.buildAndExpand(savedStudent.getId()).toUri();
 		return ResponseEntity.created(location).build();
@@ -51,13 +56,13 @@ public class StudentController {
 	}
 	
 	@PutMapping("/student/{id}")
-	public ResponseEntity<Object> updateStudent(@RequestBody Student student, @PathVariable int id) {
+	public ResponseEntity<Object> updateStudent(@RequestBody StudentDTO studentDTO, @PathVariable int id) {
 		Optional<Student> studentOptional = studentRepository.findById(id);
 		if (!studentOptional.isPresent()) {
 			return ResponseEntity.notFound().build();
 		}
-		student.setId(id);
-		studentRepository.save(student);
+		studentDTO.setId(id);
+		studentRepository.save(studentDTO.toBean());
 		return ResponseEntity.noContent().build();
 	}
 }

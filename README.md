@@ -23,6 +23,6 @@ To grant EC2 instance (Spring Boot) reading Secrets Manager, we use IAM Role, IA
 [x] Optional use Secrets Manager  
 [] Test code  
 [] Use region as an environment  
-[] RDS Read Replicas  
+[x] RDS Read Replicas
 
 

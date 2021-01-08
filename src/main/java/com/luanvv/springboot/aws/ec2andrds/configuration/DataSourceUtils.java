@@ -2,14 +2,11 @@ package com.luanvv.springboot.aws.ec2andrds.configuration;
 
 import java.io.IOException;
 import java.text.MessageFormat;
-import java.util.Properties;
 
-import org.springframework.boot.context.event.ApplicationPreparedEvent;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.annotation.Profile;
-import org.springframework.core.env.ConfigurableEnvironment;
+import javax.sql.DataSource;
+
+import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.core.env.Environment;
-import org.springframework.core.env.PropertiesPropertySource;
 import org.springframework.stereotype.Component;
 
 import com.amazonaws.services.secretsmanager.AWSSecretsManager;
@@ -25,29 +22,15 @@ import com.luanvv.springboot.aws.ec2andrds.exceptions.DataSourceSecretDoesNotExi
 import com.luanvv.springboot.aws.ec2andrds.exceptions.DataSourceSecretEmptyOrNullException;
 import com.luanvv.springboot.aws.ec2andrds.exceptions.DataSourceSecretInvalidException;
 
-@Profile({ "prod", "stag" })
 @Component
-public class DatabasePropertiesListener implements ApplicationListener<ApplicationPreparedEvent> {
+public class DataSourceUtils {
 
-	private static final String USE_SECRETS = "com.luanvv.springboot.aws.useSecrets";
-	private static final String AWS_SECRETS_REGION = "spring.aws.secretsmanager.region";
-	private static final String AWS_SECRET_NAME = "spring.aws.secretsmanager.secretName";
-	private static final String SPRING_DATASOURCE_USERNAME = "spring.datasource.username";
-	private static final String SPRING_DATASOURCE_PASSWORD = "spring.datasource.password";
-	private static final String SPRING_DATASOURCE_URL = "spring.datasource.url";
-
-	@Override
-	public void onApplicationEvent(ApplicationPreparedEvent event) {
-		ConfigurableEnvironment env = event.getApplicationContext().getEnvironment();
-		if (isNotUseSecrets(env)) {
-			return;
-		}
-		String secretName = env.getProperty(AWS_SECRET_NAME);
-		String region = env.getProperty(AWS_SECRETS_REGION);
-		System.out.println("********************");
-		System.out.println(env.getProperty(USE_SECRETS));
+	public enum Route {
+		PRIMARY, READ
+	}
+	
+	public DataSource getBySecrets(String secretName, String region) {
 		AWSSecretsManager client = AWSSecretsManagerClientBuilder.standard().withRegion(region).build();
-
 		GetSecretValueRequest getSecretValueRequest = new GetSecretValueRequest().withSecretId(secretName);
 		GetSecretValueResult getSecretValueResponse = getSecretResponse(secretName, client, getSecretValueRequest);
 		JsonNode secretsJson = getSecretsJson(getSecretValueResponse);
@@ -56,18 +39,14 @@ public class DatabasePropertiesListener implements ApplicationListener<Applicati
 		String dbname = secretsJson.get("dbname").textValue();
 		String username = secretsJson.get("username").textValue();
 		String password = secretsJson.get("password").textValue();
+		// Note: additional parameters only applying for MySQL
 		String url = MessageFormat.format("jdbc:{0}://{1}:3306/{2}?useSSL=false&useUnicode=yes&characterEncoding=UTF-8",
 				engine, host, dbname);
-		Properties props = new Properties();
-		props.put(SPRING_DATASOURCE_USERNAME, username);
-		props.put(SPRING_DATASOURCE_PASSWORD, password);
-		props.put(SPRING_DATASOURCE_URL, url);
-		env.getPropertySources().addFirst(new PropertiesPropertySource(AWS_SECRET_NAME, props));
-
-	}
-
-	private boolean isNotUseSecrets(Environment env) {
-		return !"true".equals(env.getProperty(USE_SECRETS));
+		return DataSourceBuilder.create()
+				.username(username)
+				.password(password)
+				.url(url)
+				.build();
 	}
 
 	private JsonNode getSecretsJson(GetSecretValueResult getSecretValueResponse) {
@@ -102,5 +81,31 @@ public class DatabasePropertiesListener implements ApplicationListener<Applicati
 		}
 		return getSecretValueResponse;
 	}
-
+	
+	public DataSource getByProperties(Environment env, Route route) {
+		DataSourceBean dataSourceBean = getBeanByRoute(env, route);
+		return DataSourceBuilder.create()
+				.username(dataSourceBean.getUsername())
+				.password(dataSourceBean.getPassword())
+				.url(dataSourceBean.getUrl())
+				.build();
+	}
+	
+	private DataSourceBean getBeanByRoute(Environment env, Route route) {
+		switch (route) {
+			case PRIMARY:
+				return new DataSourceBean(
+						env.getProperty("spring.datasource.primary.url"), 
+						env.getProperty("spring.datasource.primary.username"), 
+						env.getProperty("spring.datasource.primary.password")
+				);
+			case READ:
+				return new DataSourceBean(
+						env.getProperty("spring.datasource.read.url"), 
+						env.getProperty("spring.datasource.read.username"), 
+						env.getProperty("spring.datasource.read.password")
+				);
+		}
+		throw new IllegalArgumentException("Invalid route");
+	}
 }
