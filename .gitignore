@@ -28,6 +28,3 @@ target/
 .settings/
 #src/main/resources/application-prod.properties
 logs/
-.mvn/
-mvnw
-mvnw.cmd
