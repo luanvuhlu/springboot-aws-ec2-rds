@@ -23,6 +23,7 @@ To grant EC2 instance (Spring Boot) reading Secrets Manager, we use IAM Role, IA
 [x] Optional use Secrets Manager  
 [] Test code  
 [] Use region as an environment  
-[x] RDS Read Replicas
+[x] Database Read Replicas
+[] Support Docker, Docker compose
 
 
